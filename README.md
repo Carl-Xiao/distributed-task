@@ -11,10 +11,14 @@
 
 ## 项目前期准备
 
-- golang知识
+- golang基本知识
 
 - crontab表达式解析
 
+- etcd
+
+- mongodb
+
 ## 完成进度
 
-- 无
+- 基础知识储备阶段

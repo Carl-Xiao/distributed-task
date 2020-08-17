@@ -104,9 +104,7 @@ func TestWatch(t *testing.T) {
 		watcher            clientv3.Watcher
 		watchRespChan      clientv3.WatchChan
 	)
-
 	kv = clientv3.NewKV(client)
-
 	// 模拟KV的变化
 	go func() {
 		for {
@@ -152,4 +150,100 @@ func TestWatch(t *testing.T) {
 		}
 	}
 
+}
+
+//使用Op操作
+func TestOpPut(t *testing.T) {
+	client := getClient()
+	putOp := clientv3.OpPut("/cron/jobs/job5", "byebye")
+	kv := clientv3.NewKV(client)
+
+	result, err := kv.Do(context.TODO(), putOp)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	fmt.Println(result.Put().Header.Revision)
+}
+
+//TXN分布式乐观锁
+
+func TestTxn(t *testing.T) {
+	// 1. 上锁
+	// 1.1 创建租约
+	client := getClient()
+	var (
+		lease          clientv3.Lease
+		leaseGrantResp *clientv3.LeaseGrantResponse
+		leaseId        clientv3.LeaseID
+		err            error
+		kv             clientv3.KV
+		txn            clientv3.Txn
+
+		txnResp *clientv3.TxnResponse
+		//自动续租
+		keepRespChan <-chan *clientv3.LeaseKeepAliveResponse
+		keepResp     *clientv3.LeaseKeepAliveResponse
+	)
+	lease = clientv3.NewLease(client)
+
+	// 创建一个可取消的租约，主要是为了退出的时候能够释放
+	ctx, cancelFunc := context.WithCancel(context.TODO())
+
+	if leaseGrantResp, err = lease.Grant(ctx, 5); err != nil {
+		panic(err)
+	}
+	leaseId = leaseGrantResp.ID
+
+	//利用context传递cancel取消租约 大概5s会主动退出
+	defer cancelFunc()
+	defer lease.Revoke(context.TODO(), leaseId)
+
+	//自动续租
+	if keepRespChan, err = lease.KeepAlive(ctx, leaseId); err != nil {
+		panic(err)
+	}
+	// 续约应答
+	go func() {
+		for {
+			select {
+			case keepResp = <-keepRespChan:
+				if keepRespChan == nil {
+					fmt.Println("租约已经失效了")
+					goto END
+				} else { // 每秒会续租一次, 所以就会受到一次应答
+					fmt.Println("收到自动续租应答:", keepResp.ID)
+				}
+			}
+		}
+	END:
+	}()
+
+	//2 逻辑处理
+	kv = clientv3.NewKV(client)
+
+	// 创建事物
+	txn = kv.Txn(context.TODO())
+
+	//if 不存在key， then 设置它, else 抢锁失败
+	txn.If(clientv3.Compare(clientv3.CreateRevision("lock"), "=", 0)).
+		Then(clientv3.OpPut("lock", "g", clientv3.WithLease(leaseId))).
+		Else(clientv3.OpGet("lock"))
+
+	// 提交事务
+	if txnResp, err = txn.Commit(); err != nil {
+		panic(err)
+	}
+
+	if !txnResp.Succeeded {
+		fmt.Println("锁被占用:", string(txnResp.Responses[0].GetResponseRange().Kvs[0].Value))
+		return
+	}
+
+	// 2. 抢到锁后执行业务逻辑，没有抢到退出
+	fmt.Println("处理任务")
+	time.Sleep(5 * time.Second)
+
+	//3 释放租约
+	//defer释放,关联的已经可以被删除
 }

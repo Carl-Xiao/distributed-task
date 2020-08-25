@@ -1,6 +1,8 @@
 package server
 
 import (
+	"context"
+	"encoding/json"
 	"github.com/Carl-Xiao/distributed-task/common"
 	"github.com/coreos/etcd/clientv3"
 	"time"
@@ -42,6 +44,31 @@ func InitJobMgr() (err error) {
 		Client: client,
 		Kv:     kv,
 		Lease:  lease,
+	}
+	return
+}
+
+//SaveManager 保存定时器任务到etcd中
+func (manager *JobMgr) SaveManager(job *common.Job) (oldJob *common.Job, err error) {
+	var (
+		jobKey     string
+		jobValue   []byte
+		putRespone *clientv3.PutResponse
+	)
+	jobKey = "/cron/jobs/" + job.Name
+	//序列化字符串存入到etcd
+	if jobValue, err = json.Marshal(job); err != nil {
+		return
+	}
+
+	if putRespone, err = manager.Kv.Put(context.TODO(), jobKey, string(jobValue), clientv3.WithPrevKV()); err != nil {
+		return
+	}
+
+	if putRespone.PrevKv != nil {
+		if err = json.Unmarshal(putRespone.PrevKv.Value, oldJob); err != nil {
+			return
+		}
 	}
 	return
 }

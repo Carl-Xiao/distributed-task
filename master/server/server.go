@@ -21,6 +21,7 @@ func handlerJobSava(w http.ResponseWriter, r *http.Request) {
 		jobStr string
 		job    common.Job
 		oldJob *common.Job
+		result []byte
 	)
 	if err = r.ParseForm(); err != nil {
 		goto ERR
@@ -34,14 +35,19 @@ func handlerJobSava(w http.ResponseWriter, r *http.Request) {
 	if oldJob, err = G_jobMgr.SaveManager(&job); err != nil {
 		goto ERR
 	}
-	fmt.Println(oldJob)
+
+	if result, err = common.BuildResultResponse(0, "SUCCESS", oldJob); err == nil {
+		_, _ = w.Write(result)
+	}
+
 ERR:
-	fmt.Println(err.Error())
+	if result, err = common.BuildResultResponse(0, "FAIL", oldJob); err != nil {
+		_, _ = w.Write(result)
+	}
 }
 
 func InitServer() (err error) {
 	mux := http.NewServeMux()
-
 	mux.HandleFunc("/Job/Save", handlerJobSava)
 
 	server := &http.Server{

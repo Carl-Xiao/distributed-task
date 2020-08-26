@@ -54,21 +54,24 @@ func (manager *JobMgr) SaveManager(job *common.Job) (oldJob *common.Job, err err
 		jobKey     string
 		jobValue   []byte
 		putRespone *clientv3.PutResponse
+
+		jobObj common.Job
 	)
 	jobKey = "/cron/jobs/" + job.Name
 	//序列化字符串存入到etcd
 	if jobValue, err = json.Marshal(job); err != nil {
 		return
 	}
-
 	if putRespone, err = manager.Kv.Put(context.TODO(), jobKey, string(jobValue), clientv3.WithPrevKV()); err != nil {
 		return
 	}
 
 	if putRespone.PrevKv != nil {
-		if err = json.Unmarshal(putRespone.PrevKv.Value, oldJob); err != nil {
+		if err = json.Unmarshal(putRespone.PrevKv.Value, &jobObj); err != nil {
+			common.Error(err.Error())
 			return
 		}
+		oldJob = &jobObj
 	}
 	return
 }

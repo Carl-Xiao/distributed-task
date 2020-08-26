@@ -57,7 +57,7 @@ func (manager *JobMgr) SaveManager(job *common.Job) (oldJob *common.Job, err err
 
 		jobObj common.Job
 	)
-	jobKey = "/cron/jobs/" + job.Name
+	jobKey = common.JOB_DIR + job.Name
 	//序列化字符串存入到etcd
 	if jobValue, err = json.Marshal(job); err != nil {
 		return
@@ -72,6 +72,74 @@ func (manager *JobMgr) SaveManager(job *common.Job) (oldJob *common.Job, err err
 			return
 		}
 		oldJob = &jobObj
+	}
+	return
+}
+
+//DeleteManager 删除定时器
+func (manager *JobMgr) DeleteManager(name string) (oldJob *common.Job, err error) {
+	var (
+		jobKey        string
+		deleteRespone *clientv3.DeleteResponse
+		jobObj        common.Job
+	)
+	jobKey = common.JOB_DIR + name
+
+	if deleteRespone, err = manager.Kv.Delete(context.TODO(), jobKey, clientv3.WithPrevKV()); err != nil {
+		return
+	}
+	if deleteRespone.Deleted > 0 {
+		if err = json.Unmarshal(deleteRespone.PrevKvs[0].Value, &jobObj); err != nil {
+			common.Error(err.Error())
+			err = nil
+
+		}
+		oldJob = &jobObj
+	}
+	return
+}
+
+//ListManager 列出所有定时器任务
+func (manager *JobMgr) ListManager() (jobList []*common.Job, err error) {
+	var (
+		jobKey      string
+		listRespone *clientv3.GetResponse
+		jobObj      common.Job
+	)
+	jobKey = common.JOB_DIR
+	if listRespone, err = manager.Kv.Get(context.TODO(), jobKey, clientv3.WithPrefix()); err != nil {
+		return
+	}
+
+	if listRespone.Count > 0 {
+		jobList = make([]*common.Job, 0)
+		for _, value := range listRespone.Kvs {
+			if err = json.Unmarshal(value.Value, &jobObj); err != nil {
+				err = nil
+				continue
+			}
+			jobList = append(jobList, &jobObj)
+		}
+	}
+	return
+}
+
+// 通知manager杀死任务
+func (manager *JobMgr) KillManager(name string) (err error) {
+	var (
+		jobKey             string
+		leaseGrantResponse *clientv3.LeaseGrantResponse
+		leaseID            clientv3.LeaseID
+	)
+	jobKey = common.JOB_KILLER + name
+
+	if leaseGrantResponse, err = manager.Lease.Grant(context.TODO(), 1); err != nil {
+		return
+	}
+	leaseID = leaseGrantResponse.ID
+
+	if _, err = manager.Client.Put(context.TODO(), jobKey, "", clientv3.WithLease(leaseID)); err != nil {
+		return
 	}
 	return
 }

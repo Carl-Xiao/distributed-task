@@ -2,6 +2,11 @@ package common
 
 import "encoding/json"
 
+const (
+	JOB_DIR    = "/cron/jobs/"
+	JOB_KILLER = "/cron/killer/"
+)
+
 type Job struct {
 	Name     string `json:"name"`
 	Command  string `json:"command"`

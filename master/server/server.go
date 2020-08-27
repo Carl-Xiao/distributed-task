@@ -113,11 +113,16 @@ ERR:
 }
 
 func InitServer() (err error) {
+	var handler http.Handler
 	mux := http.NewServeMux()
 	mux.HandleFunc("/Job/save", handlerJobSave)
 	mux.HandleFunc("/Job/delete", handlerJobDelete)
 	mux.HandleFunc("/Job/list", handlerJobList)
 	mux.HandleFunc("/Job/killer", handlerJobKiller)
+
+	dir := http.Dir("./master/web")
+	handler = http.FileServer(dir)
+	mux.Handle("/", handler)
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", common.PORT),
@@ -125,7 +130,8 @@ func InitServer() (err error) {
 		ReadTimeout:  common.ReadTimeout,
 		WriteTimeout: common.WriteTimeout,
 	}
-	common.Info("server init")
+	common.Info(fmt.Sprintf(":%d", common.PORT) + ":启动")
+
 	if err = server.ListenAndServe(); err != nil {
 		return
 	}

@@ -21,4 +21,7 @@
 
 ## 完成进度
 
-- 基础知识储备阶段
+[X] 基础知识储备阶段
+
+前端页面依赖
+[https://github.com/Semantic-Org/Semantic-UI](https://github.com/Semantic-Org/Semantic-UI) 

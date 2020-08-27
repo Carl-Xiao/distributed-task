@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>首页</title>
+    <!--jquery-->
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.slim.min.js"></script>
+    <!--semantic-ui样式-->
+    <link href="https://cdn.bootcdn.net/ajax/libs/semantic-ui/2.4.1/semantic.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcdn.net/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
+</head>
+<body>
+
+<div class="ui grid container">
+    <div class="row">
+        <h1 class="ui dividing header">分布式任务调度平台</h1>
+    </div>
+    <div class="row">
+        <button class="ui blue button">新增</button>
+    </div>
+
+    <div class="row">
+        <table id="table" class="ui celled structured table">
+            <thead>
+            <tr>
+                <th class="ui top attached block header">任务名称</th>
+                <th class="ui top attached block header">Shell命令</th>
+                <th class="ui top attached block header">cron表达式</th>
+                <th class="ui top attached block header">操作命令</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>John</td>
+                <td>No</td>
+                <td>John</td>
+                <td>
+                    <a class="ui basic blue button delete" tabindex="0">
+                        刪除
+                    </a>
+                    <a class="ui basic red  button stop" tabindex="0">
+                        停止
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+
+<script>
+    //初始化綁定事件
+    $(function() {
+        $("#table").on("click",".delete",function(event) {
+            console.log(event)
+        })
+    });
+</script>
+
+</html>

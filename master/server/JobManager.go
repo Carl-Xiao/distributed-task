@@ -104,7 +104,7 @@ func (manager *JobMgr) ListManager() (jobList []*common.Job, err error) {
 	var (
 		jobKey      string
 		listRespone *clientv3.GetResponse
-		jobObj      common.Job
+		jobObj      *common.Job
 	)
 	jobKey = common.JOB_DIR
 	if listRespone, err = manager.Kv.Get(context.TODO(), jobKey, clientv3.WithPrefix()); err != nil {
@@ -114,11 +114,13 @@ func (manager *JobMgr) ListManager() (jobList []*common.Job, err error) {
 	if listRespone.Count > 0 {
 		jobList = make([]*common.Job, 0)
 		for _, value := range listRespone.Kvs {
+			//TODO 重点  必须使用临时变量每次重新申请内存
+			jobObj = &common.Job{}
 			if err = json.Unmarshal(value.Value, &jobObj); err != nil {
 				err = nil
 				continue
 			}
-			jobList = append(jobList, &jobObj)
+			jobList = append(jobList, jobObj)
 		}
 	}
 	return

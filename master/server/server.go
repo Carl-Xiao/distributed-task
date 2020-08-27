@@ -73,6 +73,7 @@ ERR:
 }
 
 func handlerJobList(w http.ResponseWriter, r *http.Request) {
+	common.Info("Job List")
 	var (
 		err    error
 		oldJob []*common.Job

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>首页</title>
     <!--jquery-->
-    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.slim.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <!--semantic-ui样式-->
     <link href="https://cdn.bootcdn.net/ajax/libs/semantic-ui/2.4.1/semantic.min.css" rel="stylesheet">
     <script src="https://cdn.bootcdn.net/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
@@ -20,7 +20,7 @@
     </div>
 
     <div class="row">
-        <table id="table" class="ui celled structured table">
+        <table class="ui celled structured table">
             <thead>
             <tr>
                 <th class="ui top attached block header">任务名称</th>
@@ -30,19 +30,6 @@
             </tr>
             </thead>
             <tbody>
-            <tr>
-                <td>John</td>
-                <td>No</td>
-                <td>John</td>
-                <td>
-                    <a class="ui basic blue button delete" tabindex="0">
-                        刪除
-                    </a>
-                    <a class="ui basic red  button stop" tabindex="0">
-                        停止
-                    </a>
-                </td>
-            </tr>
             </tbody>
         </table>
     </div>
@@ -51,11 +38,47 @@
 </body>
 
 <script>
-    //初始化綁定事件
-    $(function() {
-        $("#table").on("click",".delete",function(event) {
-            console.log(event)
+    function jobList() {
+        $.ajax({
+            url: "/Job/list",
+            dataType: "json",
+            success: function (res) {
+                if (res.code === 0) {
+                    var jobList = res.data
+                    $("table tbody").empty()
+                    for (var i = 0; i < jobList.length; i++) {
+                        var job = jobList[i]
+                        var tr = $("<tr>")
+                        tr.append($('<td class="job-name">').html(job.name))
+                        tr.append($('<td class="job-command">').html(job.command))
+                        tr.append($('<td class="job-expr">').html(job.cronExpr))
+
+                        var tool = $('<div class="ui buttons">').append('<button class="ui basic orange button edit">编辑</button>')
+                            .append('<button class="ui basic blue button delete">删除</button>')
+                            .append('<button class="ui basic red  button stop">强杀</button>')
+                        tr.append($("<td>").append(tool))
+
+                        $("table tbody").append(tr)
+                    }
+                }
+            }
         })
+    }
+    //初始化綁定事件
+    $(function () {
+        $("#table").on("click", ".edit", function (event) {
+            console.log("删除程序")
+        })
+
+        $("#table").on("click", ".delete", function (event) {
+            console.log("删除程序")
+        })
+
+        $("#table").on("click", ".stop", function (event) {
+            console.log("强杀停止程序")
+        })
+
+        jobList()
     });
 </script>
 

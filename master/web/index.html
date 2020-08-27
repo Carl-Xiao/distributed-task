@@ -64,17 +64,35 @@
             }
         })
     }
+
+    function deleteJob(name) {
+        $.ajax({
+            url: "/Job/delete",
+            dataType: "json",
+            data: "name=" + name,
+            success: function (res) {
+                if (res.code === 0) {
+                    jobList()
+                }
+            }
+        })
+    }
+
     //初始化綁定事件
     $(function () {
-        $("#table").on("click", ".edit", function (event) {
+        $("table").on("click", ".edit", function (event) {
             console.log("删除程序")
         })
 
-        $("#table").on("click", ".delete", function (event) {
-            console.log("删除程序")
+        $("table").on("click", ".delete", function (event) {
+            var name = $(this).parents("tr").children(".job-name").text()
+            console.log(name)
+            deleteJob(name)
         })
 
-        $("#table").on("click", ".stop", function (event) {
+        $("table").on("click", ".stop", function (event) {
+
+
             console.log("强杀停止程序")
         })
 

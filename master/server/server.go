@@ -47,6 +47,7 @@ ERR:
 }
 
 func handlerJobDelete(w http.ResponseWriter, r *http.Request) {
+	common.Info("delete jonb")
 	var (
 		err    error
 		name   string
@@ -57,7 +58,7 @@ func handlerJobDelete(w http.ResponseWriter, r *http.Request) {
 		goto ERR
 	}
 	name = r.PostForm.Get("name")
-
+	common.Info("name:" + name)
 	if oldJob, err = G_jobMgr.DeleteManager(name); err != nil {
 		goto ERR
 	}

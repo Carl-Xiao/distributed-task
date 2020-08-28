@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>首页</title>
+    <link rel="shortcut icon" href="#"/>
     <!--jquery-->
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <!--semantic-ui样式-->
@@ -11,12 +12,40 @@
 </head>
 <body>
 
+
 <div class="ui grid container">
     <div class="row">
         <h1 class="ui dividing header">分布式任务调度平台</h1>
     </div>
     <div class="row">
-        <button class="ui blue button">新增</button>
+        <button class="ui blue button" onclick="addButton()">新增</button>
+    </div>
+
+    <div class="ui modal">
+        <div class="content">
+            <form class="ui form">
+                <div class="field">
+                    <label>任务</label>
+                    <input type="text" name="jobName" id="jobName" placeholder="名称">
+                </div>
+                <div class="field">
+                    <label>Cron表达式:</label>
+                    <input type="text" name="jobCommand" id="jobCommand" placeholder="表达式">
+                </div>
+                <div class="field">
+                    <label>执行命令:</label>
+                    <input type="text" name="jobCronExpr" id="jobCronExpr" placeholder="执行命令">
+                </div>
+            </form>
+        </div>
+        <div class="actions">
+            <div class="ui positive right labeled icon button">
+                保存 <i class="checkmark icon"></i>
+            </div>
+            <div class="ui black deny button">
+                取消
+            </div>
+        </div>
     </div>
 
     <div class="row">
@@ -53,7 +82,7 @@
                         tr.append($('<td class="job-command">').html(job.command))
                         tr.append($('<td class="job-expr">').html(job.cronExpr))
 
-                        var tool = $('<div class="ui buttons">').append('<button class="ui basic orange button edit">编辑</button>')
+                        var tool = $('<div class="ui buttons">').append('<button class="ui basic orange button edit" >编辑</button>')
                             .append('<button class="ui basic blue button delete">删除</button>')
                             .append('<button class="ui basic red  button stop">强杀</button>')
                         tr.append($("<td>").append(tool))
@@ -68,20 +97,63 @@
     function deleteJob(name) {
         $.ajax({
             url: "/Job/delete",
+            type: "POST",
             dataType: "json",
-            data: "name=" + name,
+            data: {
+                name: name
+            },
             success: function (res) {
                 if (res.code === 0) {
-                    jobList()
+                    <!--重载页面-->
+                    window.location.reload()
                 }
             }
         })
     }
 
+    function killJob(name) {
+        $.ajax({
+            url: "/Job/kill",
+            type: "POST",
+            dataType: "json",
+            data: {
+                name: name
+            },
+            success: function (res) {
+                if (res.code === 0) {
+                    window.location.reload()
+                }
+            }
+        })
+    }
+
+    function addButton() {
+        $('.ui.modal')
+            .modal({
+                inverted: true
+            })
+            .modal('show')
+    }
+
+
     //初始化綁定事件
     $(function () {
         $("table").on("click", ".edit", function (event) {
-            console.log("删除程序")
+            var tr = $(this).parents("tr")
+
+            var name = tr.children(".job-name").text()
+            var command = $(this).parents("tr").children(".job-command).text()
+            var expr = $(this).parents("tr").children(".job-expr").text()
+
+            $("#jobName).val(name)
+            $("#jobCommand).val(command)
+            $("#jobCronExpr).val(expr)
+
+            $('.ui.modal')
+                .modal({
+                    inverted: true
+                })
+                .modal('show')
         })
 
         $("table").on("click", ".delete", function (event) {
@@ -91,13 +163,14 @@
         })
 
         $("table").on("click", ".stop", function (event) {
-
-
-            console.log("强杀停止程序")
+            var name = $(this).parents("tr").children(".job-name").text()
+            console.log(name)
+            killJob(name)
         })
 
         jobList()
     });
 </script>
+
 
 </html>

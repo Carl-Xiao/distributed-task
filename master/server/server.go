@@ -95,6 +95,7 @@ ERR:
 }
 
 func handlerJobKiller(w http.ResponseWriter, r *http.Request) {
+	common.Info("kill jonb")
 	var (
 		err    error
 		name   string
@@ -120,7 +121,7 @@ func InitServer() (err error) {
 	mux.HandleFunc("/Job/save", handlerJobSave)
 	mux.HandleFunc("/Job/delete", handlerJobDelete)
 	mux.HandleFunc("/Job/list", handlerJobList)
-	mux.HandleFunc("/Job/killer", handlerJobKiller)
+	mux.HandleFunc("/Job/kill", handlerJobKiller)
 
 	dir := http.Dir("./master/web")
 	handler = http.FileServer(dir)

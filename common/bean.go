@@ -1,6 +1,9 @@
 package common
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 const (
 	JOB_DIR    = "/cron/jobs/"
@@ -11,6 +14,10 @@ type Job struct {
 	Name     string `json:"name"`
 	Command  string `json:"command"`
 	CronExpr string `json:"cronExpr"`
+}
+
+func (job Job) ToString() string {
+	return fmt.Sprintf("Name:%s ,Command:%s,CronExpr:%s", job.Name, job.Command, job.CronExpr)
 }
 
 type Result struct {
@@ -31,5 +38,14 @@ func BuildResultResponse(code int, msg string, data interface{}) (byte []byte, e
 	if byte, err = json.Marshal(result); err != nil {
 		return
 	}
+	return
+}
+
+func UnPackResponse(byte []byte) (job Job, err error) {
+	var obj Job
+	if err = json.Unmarshal(byte, &obj); err != nil {
+		return
+	}
+	job = obj
 	return
 }

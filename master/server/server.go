@@ -16,6 +16,7 @@ type ApiServer struct {
 }
 
 func handlerJobSave(w http.ResponseWriter, r *http.Request) {
+	common.Info("save jonb")
 	var (
 		err    error
 		jobStr string
@@ -27,8 +28,8 @@ func handlerJobSave(w http.ResponseWriter, r *http.Request) {
 		goto ERR
 	}
 	jobStr = r.PostForm.Get("job")
-
 	if err = json.Unmarshal([]byte(jobStr), &job); err != nil {
+		common.Error(err.Error())
 		goto ERR
 	}
 
@@ -39,9 +40,9 @@ func handlerJobSave(w http.ResponseWriter, r *http.Request) {
 	if result, err = common.BuildResultResponse(0, "SUCCESS", oldJob); err == nil {
 		_, _ = w.Write(result)
 	}
-
+	return
 ERR:
-	if result, err = common.BuildResultResponse(-1, "FAIL", nil); err != nil {
+	if result, err = common.BuildResultResponse(-1, "FAIL", err.Error()); err != nil {
 		_, _ = w.Write(result)
 	}
 }

@@ -18,7 +18,7 @@
         <h1 class="ui dividing header">分布式任务调度平台</h1>
     </div>
     <div class="row">
-        <button class="ui blue button" onclick="addButton()">新增</button>
+        <button class="ui blue button" id="addNew">新增</button>
     </div>
 
     <div class="ui modal">
@@ -39,7 +39,7 @@
             </form>
         </div>
         <div class="actions">
-            <div class="ui positive right labeled icon button">
+            <div class="ui positive right labeled icon button" id="saveTab">
                 保存 <i class="checkmark icon"></i>
             </div>
             <div class="ui black deny button">
@@ -127,27 +127,38 @@
         })
     }
 
-    function addButton() {
-        $('.ui.modal')
-            .modal({
-                inverted: true
-            })
-            .modal('show')
+    function SaveJob(result) {
+        $.ajax({
+            url: "/Job/save",
+            type: "POST",
+            dataType: "json",
+            data: {
+                job: JSON.stringify(result)
+            },
+            success: function (res) {
+                console.log(res)
+                if (res.code === 0) {
+                    window.location.reload()
+                }
+            }
+        })
     }
+
+
+
 
 
     //初始化綁定事件
     $(function () {
         $("table").on("click", ".edit", function (event) {
             var tr = $(this).parents("tr")
-
             var name = tr.children(".job-name").text()
-            var command = $(this).parents("tr").children(".job-command).text()
-            var expr = $(this).parents("tr").children(".job-expr").text()
+            var command = tr.children(".job-command").text()
+            var expr = tr.children(".job-expr").text()
 
-            $("#jobName).val(name)
-            $("#jobCommand).val(command)
-            $("#jobCronExpr).val(expr)
+            $("#jobName").val(name)
+            $("#jobCommand").val(command)
+            $("#jobCronExpr").val(expr)
 
             $('.ui.modal')
                 .modal({
@@ -167,6 +178,26 @@
             console.log(name)
             killJob(name)
         })
+
+        //保存任务按钮
+        $("#saveTab").on("click", function (event) {
+            var result = {
+                "name": $("#jobName").val(),
+                "command": $("#jobCommand").val(),
+                "cronExpr": $("#jobCronExpr").val()
+            }
+            SaveJob(result)
+        })
+
+        //保存任务按钮
+        $("#addNew").on("click", function (event) {
+            $('.ui.modal')
+                .modal({
+                    inverted: true
+                })
+                .modal('show')
+        })
+
 
         jobList()
     });

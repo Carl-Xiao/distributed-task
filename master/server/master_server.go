@@ -129,12 +129,12 @@ func InitServer() (err error) {
 	mux.Handle("/", handler)
 
 	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", common.PORT),
+		Addr:         fmt.Sprintf(":%d", common.App.MASTER_PORT),
 		Handler:      mux,
 		ReadTimeout:  common.ReadTimeout,
 		WriteTimeout: common.WriteTimeout,
 	}
-	common.Info(fmt.Sprintf(":%d", common.PORT) + ":启动")
+	common.Info(fmt.Sprintf(":%d", common.App.MASTER_PORT) + ":启动")
 
 	if err = server.ListenAndServe(); err != nil {
 		return

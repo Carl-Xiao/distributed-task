@@ -15,7 +15,8 @@ type Appconfig struct {
 
 //Server INI配置文件
 type Server struct {
-	PORT         int `ini:"PORT"`
+	MASTER_PORT  int `ini:"MASTER_PORT"`
+	WORKER_PORT  int `ini:"WORKER_PORT"`
 	ReadTimeout  int `ini:"READ_TIMEOUT"`
 	WriteTimeout int `ini:"READ_TIMEOUT"`
 }
@@ -39,7 +40,6 @@ var (
 	App          *Appconfig
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
-	PORT         int
 	EndPoint     []string
 )
 
@@ -52,7 +52,6 @@ func InitBase() (err error) {
 	}
 	ReadTimeout = time.Duration(App.ReadTimeout) * time.Second
 	WriteTimeout = time.Duration(App.WriteTimeout) * time.Second
-	PORT = App.PORT
 	EndPoint = App.EndPoint
 	//加载logger
 	err = InitLogger(App.LogConfig)

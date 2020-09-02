@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"github.com/Carl-Xiao/distributed-task/common"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/mvcc/mvccpb"
@@ -49,6 +50,7 @@ func InitJobMgr() (err error) {
 		Lease:   lease,
 		Watcher: watcher,
 	}
+	err = G_jobMgr.JobWatch()
 	return
 }
 
@@ -56,11 +58,12 @@ func InitJobMgr() (err error) {
 func (manager *JobMgr) JobWatch() (err error) {
 	var (
 		response      *clientv3.GetResponse
-		job           common.Job
+		job           *common.Job
+		jobEvent      *common.JobEvent
 		revision      int64
 		whathChan     clientv3.WatchChan
 		watchResponse clientv3.WatchResponse
-		event         clientv3.Event
+		event         *clientv3.Event
 		jobName       string
 	)
 	if response, err = manager.Kv.Get(context.TODO(), common.JOB_DIR, clientv3.WithPrefix()); err != nil {
@@ -79,26 +82,27 @@ func (manager *JobMgr) JobWatch() (err error) {
 		//获取当前的历史版本
 		revision = response.Header.Revision + 1
 		//开启watcher
-		whathChan = manager.Watcher.Watch(context.TODO(), common.JOB_DIR, clientv3.WithRev(revision))
-
+		whathChan = manager.Watcher.Watch(context.TODO(), common.JOB_DIR, clientv3.WithRev(revision), clientv3.WithPrefix())
 		for watchResponse = range whathChan {
-			for event = range watchResponse.Events {
+			for _, event = range watchResponse.Events {
 				switch event.Type {
 				case mvccpb.PUT:
-					//TODO 反序列化任务
 					if job, err = common.UnPackResponse(event.Kv.Value); err != nil {
 						common.Error(err.Error())
 						continue
 					}
-					//推送到调度携程 scheduler
+					jobEvent = common.BuildJobEvent(common.JOB_EVENT_SAVE, job)
 				case mvccpb.DELETE:
-					//TODO 删除事件
 					jobName = common.ExtractJobName(string(event.Kv.Key))
-					//让调度携程停止调度程序 scheduler
+					job = &common.Job{
+						Name: jobName,
+					}
+					jobEvent = common.BuildJobEvent(common.JOB_EVENT_SAVE, job)
 				}
+				//TODO 推送JobEvent事件
+				fmt.Println(jobEvent.EventType)
 			}
 		}
 	}()
-
 	return
 }

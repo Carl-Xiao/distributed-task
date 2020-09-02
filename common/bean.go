@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 const (
@@ -48,4 +49,9 @@ func UnPackResponse(byte []byte) (job Job, err error) {
 	}
 	job = obj
 	return
+}
+
+//提取JobName
+func ExtractJobName(name string) string {
+	return strings.TrimPrefix(name, JOB_DIR)
 }

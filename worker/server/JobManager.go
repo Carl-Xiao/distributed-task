@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"github.com/Carl-Xiao/distributed-task/common"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/mvcc/mvccpb"
@@ -73,8 +72,13 @@ func (manager *JobMgr) JobWatch() (err error) {
 	for _, value := range response.Kvs {
 		//正常情况
 		if job, err = common.UnPackResponse(value.Value); err == nil {
-			//TODO 开启任务调度协程
-			common.Info(job.ToString())
+			if job, err = common.UnPackResponse(event.Kv.Value); err != nil {
+				common.Error(err.Error())
+				continue
+			}
+			jobEvent = common.BuildJobEvent(common.JOB_EVENT_SAVE, job)
+			//TODO 推送消息
+			G_scheduler.PushEvent(jobEvent)
 		}
 	}
 	//启动一个监听协程
@@ -99,8 +103,8 @@ func (manager *JobMgr) JobWatch() (err error) {
 					}
 					jobEvent = common.BuildJobEvent(common.JOB_EVENT_SAVE, job)
 				}
-				//TODO 推送JobEvent事件
-				fmt.Println(jobEvent.EventType)
+				//TODO 推送消息
+				G_scheduler.PushEvent(jobEvent)
 			}
 		}
 	}()

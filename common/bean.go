@@ -3,7 +3,9 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gorhill/cronexpr"
 	"strings"
+	"time"
 )
 
 const (
@@ -20,9 +22,17 @@ type Job struct {
 	CronExpr string `json:"cronExpr"`
 }
 
+//任务执行事件
 type JobEvent struct {
 	EventType int
 	*Job
+}
+
+// 任务调度器的执行事件
+type JonSchedulerPlan struct {
+	Jon      *Job
+	Express  cronexpr.Expression
+	NextTime time.Time
 }
 
 func (job Job) ToString() string {

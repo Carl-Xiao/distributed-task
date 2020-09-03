@@ -27,7 +27,14 @@ func main() {
 	}
 
 	//初始化协程调度器
-	server.InitScheduler()
+	if err = server.InitScheduler(); err != nil {
+		goto ERR
+	}
+
+	//初始化执行器
+	if err = server.InitExecutor(); err != nil {
+		goto ERR
+	}
 
 	for {
 		time.Sleep(time.Second * 1)

@@ -11,15 +11,18 @@ var (
 )
 
 type Scheduler struct {
-	Events chan *common.JobEvent
-	JobMap map[string]*common.JonSchedulerPlan
+	Events        chan *common.JobEvent
+	JobMap        map[string]*common.JonSchedulerPlan
+	JobExecuteMap map[string]*common.JobExecuteInfo
 }
 
-func InitScheduler() {
+func InitScheduler() (err error) {
 	G_scheduler = &Scheduler{
-		Events: make(chan *common.JobEvent, 100),
-		JobMap: make(map[string]*common.JonSchedulerPlan, 100),
+		Events:        make(chan *common.JobEvent, 100),
+		JobMap:        make(map[string]*common.JonSchedulerPlan, 100),
+		JobExecuteMap: make(map[string]*common.JobExecuteInfo, 10),
 	}
+	err = G_jobMgr.JobWatch()
 	go G_scheduler.LoopEvent()
 	return
 }
@@ -35,7 +38,6 @@ func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent) {
 		err  error
 		ok   bool
 	)
-
 	switch jobEvent.EventType {
 	case common.JOB_EVENT_SAVE:
 		common.Info("保存事件")
@@ -48,10 +50,28 @@ func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent) {
 			delete(scheduler.JobMap, jobEvent.Name)
 		}
 	}
-
 }
 
-//重新计算任务调度器
+// 启动任务
+func (scheduler *Scheduler) StartJob(plan *common.JonSchedulerPlan) {
+	var (
+		execute *common.JobExecuteInfo
+		exist   bool
+	)
+	//记录任务执行状态，如果当前任务正在执行,跳过执行任务
+	if _, exist = scheduler.JobExecuteMap[plan.Job.Name]; exist {
+		return
+	}
+
+	//调度执行任务
+	execute = common.BuildJobExecuteInfo(plan)
+	scheduler.JobExecuteMap[plan.Job.Name] = execute
+
+	//执行任务
+	G_executor.Execute(execute)
+}
+
+//计算任务调度器 寻找合理的休息时间,避免内存消耗
 func (scheduler *Scheduler) CalculationScheduler() (timeAfter time.Duration) {
 	//1 遍历所有任务
 	var (
@@ -67,8 +87,8 @@ func (scheduler *Scheduler) CalculationScheduler() (timeAfter time.Duration) {
 	now = time.Now()
 	for _, job = range scheduler.JobMap {
 		if job.NextTime.Before(now) || job.NextTime.Equal(now) {
-			//TODO 执行当前任务,不管之前是否执行过与否
-			fmt.Println("执行任务:" + job.Job.Name)
+			//执行当前任务,不管之前是否执行过与否
+			scheduler.StartJob(job)
 			//更新下次执行时间
 			job.NextTime = job.Express.Next(now)
 		}
@@ -90,16 +110,17 @@ func (scheduler *Scheduler) LoopEvent() {
 	)
 	sleepTime = scheduler.CalculationScheduler()
 	timeTr = time.NewTimer(sleepTime)
-
+	fmt.Println(sleepTime)
 	for {
 		fmt.Println("调度一次")
 		select {
 		case jobEvent = <-scheduler.Events:
 			scheduler.handleJobEvent(jobEvent)
 		case <-timeTr.C:
-
+			common.Info("时间已到")
 		}
 		sleepTime = scheduler.CalculationScheduler()
+		fmt.Println(sleepTime)
 		timeTr.Reset(sleepTime)
 	}
 }

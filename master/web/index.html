@@ -30,11 +30,11 @@
                 </div>
                 <div class="field">
                     <label>Cron表达式:</label>
-                    <input type="text" name="jobCommand" id="jobCommand" placeholder="表达式">
+                    <input type="text" name="jobCronExpr" id="jobCronExpr" placeholder="表达式">
                 </div>
                 <div class="field">
                     <label>执行命令:</label>
-                    <input type="text" name="jobCronExpr" id="jobCronExpr" placeholder="执行命令">
+                    <input type="text" name="jobCommand" id="jobCommand" placeholder="执行命令">
                 </div>
             </form>
         </div>
@@ -143,10 +143,6 @@
             }
         })
     }
-
-
-
-
 
     //初始化綁定事件
     $(function () {

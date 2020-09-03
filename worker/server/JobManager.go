@@ -49,7 +49,6 @@ func InitJobMgr() (err error) {
 		Lease:   lease,
 		Watcher: watcher,
 	}
-	err = G_jobMgr.JobWatch()
 	return
 }
 
@@ -72,10 +71,6 @@ func (manager *JobMgr) JobWatch() (err error) {
 	for _, value := range response.Kvs {
 		//正常情况
 		if job, err = common.UnPackResponse(value.Value); err == nil {
-			if job, err = common.UnPackResponse(event.Kv.Value); err != nil {
-				common.Error(err.Error())
-				continue
-			}
 			jobEvent = common.BuildJobEvent(common.JOB_EVENT_SAVE, job)
 			//TODO 推送消息
 			G_scheduler.PushEvent(jobEvent)

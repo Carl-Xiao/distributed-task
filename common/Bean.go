@@ -101,3 +101,18 @@ func BuildJobSchedulePlan(jobEvent *JobEvent) (plan *JonSchedulerPlan, err error
 	}
 	return
 }
+
+type JobExecuteInfo struct {
+	Job      *Job
+	PlanTime time.Time
+	RealTime time.Time
+}
+
+func BuildJobExecuteInfo(plan *JonSchedulerPlan) (execute *JobExecuteInfo) {
+	execute = &JobExecuteInfo{
+		Job:      plan.Job,
+		PlanTime: plan.NextTime,
+		RealTime: time.Now(),
+	}
+	return
+}

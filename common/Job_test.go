@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"github.com/gorhill/cronexpr"
 	"testing"
 	"time"
 )
@@ -19,4 +20,17 @@ func TestTimeEncoder(t *testing.T) {
 	timeAfter := (*recentTime).Sub(now)
 
 	fmt.Println(timeAfter)
+}
+
+func TestCron(t *testing.T) {
+	cron := "* * * * *"
+	var (
+		cronExpr *cronexpr.Expression
+		err      error
+	)
+	if cronExpr, err = cronexpr.Parse(cron); err != nil {
+		Error(err.Error())
+		return
+	}
+	fmt.Println(cronExpr.Next(time.Now()))
 }

@@ -28,13 +28,6 @@ type JobEvent struct {
 	*Job
 }
 
-// 任务调度器的执行事件
-type JonSchedulerPlan struct {
-	Jon      *Job
-	Express  cronexpr.Expression
-	NextTime time.Time
-}
-
 func (job Job) ToString() string {
 	return fmt.Sprintf("Name:%s ,Command:%s,CronExpr:%s", job.Name, job.Command, job.CronExpr)
 }
@@ -80,4 +73,31 @@ func BuildJobEvent(eventType int, job *Job) (jobEvent *JobEvent) {
 		EventType: eventType,
 		Job:       job,
 	}
+}
+
+// 任务调度器的执行事件
+type JonSchedulerPlan struct {
+	Job      *Job
+	Express  *cronexpr.Expression
+	NextTime time.Time
+}
+
+func BuildJobSchedulePlan(jobEvent *JobEvent) (plan *JonSchedulerPlan, err error) {
+	var (
+		cronExpr *cronexpr.Expression
+		nextTime time.Time
+	)
+	if cronExpr, err = cronexpr.Parse(jobEvent.CronExpr); err != nil {
+		Error(err.Error())
+		return
+	}
+	//下次执行时间
+	now := time.Now()
+	nextTime = cronExpr.Next(now)
+	plan = &JonSchedulerPlan{
+		Job:      jobEvent.Job,
+		Express:  cronExpr,
+		NextTime: nextTime,
+	}
+	return
 }

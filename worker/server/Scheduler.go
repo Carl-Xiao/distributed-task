@@ -110,9 +110,7 @@ func (scheduler *Scheduler) LoopEvent() {
 	)
 	sleepTime = scheduler.CalculationScheduler()
 	timeTr = time.NewTimer(sleepTime)
-	fmt.Println(sleepTime)
 	for {
-		fmt.Println("调度一次")
 		select {
 		case jobEvent = <-scheduler.Events:
 			scheduler.handleJobEvent(jobEvent)

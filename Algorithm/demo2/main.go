@@ -1,11 +1,22 @@
 package main
 
-func main() {
-	c, quit := make(chan int), make(chan int)
+import "fmt"
 
-	go func() {
-		c <- 1    // c通道的数据没有被其他goroutine读取走，堵塞当前goroutine
-		quit <- 0 // quit始终没有办法写入数据
-	}()
-	<-quit // quit 等待数据的写
+const (
+	a = iota
+	b = iota
+)
+const (
+	xx = ""
+	c  = iota
+	d  = iota
+)
+
+func main() {
+	str1 := []string{"a", "b", "c"}
+	str2 := str1[1:]
+	str2[1] = "new"
+	fmt.Println(str1)
+	str2 = append(str2, "z", "x", "y")
+	fmt.Println(str1)
 }

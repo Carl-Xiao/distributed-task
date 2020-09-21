@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"strings"
+	"sync"
 )
 
 /*
@@ -14,24 +15,20 @@ import (
 12AB34CD56EF78GH910IJ1112KL1314MN1516OP1718QR1920ST2122UV2324WX2526YZ2728
 */
 func main() {
-	//使用管道chan
-	//1 需要使用两个chan，控制两个不同的输出
 	number := make(chan bool)
 	letter := make(chan bool)
-	//2 打印数字 和字母
+	character := "ABCDEFGHIJKLMNOPQRSTUVWSYZ"
+	wait := sync.WaitGroup{}
 
-	number <- true
-
-	//2.1 打印数字
 	go func() {
-		i := 0
+		var i = 1
 		for {
 			select {
 			case <-number:
-				i++
 				fmt.Print(i)
 				i++
 				fmt.Print(i)
+				i++
 				letter <- true
 				break
 			default:
@@ -39,30 +36,32 @@ func main() {
 			}
 		}
 	}()
-	//2.2 打印字母
-	go func() {
-		str := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+	wait.Add(1)
+	go func(wait *sync.WaitGroup) {
+		i := 0
 		for {
 			select {
 			case <-letter:
-				if len(str)-1 < 0 {
-					break
+				if i >= strings.Count(character, "")-1 {
+					wait.Done()
+					return
 				}
-				temp := str[0:1]
-				fmt.Print(temp)
-				str = str[1:]
-				temp = str[0:1]
-				fmt.Print(temp)
-				str = str[1:]
+				fmt.Print(character[i : i+1])
+				i++
+				if i >= strings.Count(character, "") {
+					i = 0
+				}
+				fmt.Print(character[i : i+1])
+				i++
 				number <- true
 				break
 			default:
 				break
 			}
 		}
-	}()
+	}(&wait)
+	number <- true
 
-	//3 组合打印队列
-	//  在两个chan依次传递数据
-	time.Sleep(time.Second * 3)
+	wait.Wait()
 }
